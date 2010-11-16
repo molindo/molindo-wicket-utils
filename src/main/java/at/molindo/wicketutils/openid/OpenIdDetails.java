@@ -17,18 +17,14 @@
 package at.molindo.wicketutils.openid;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public class OpenIdDetails implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	private String openId;
-	private String fullName;
-	private String emailAddress;
-	private String zipCode;
-	private Date dateOfBirth;
-	private String favoriteColor;
+	private String name;
+	private String mail;
 
 	public String getOpenId() {
 		return openId;
@@ -38,44 +34,20 @@ public class OpenIdDetails implements Serializable {
 		this.openId = openId;
 	}
 
-	public String getFullName() {
-		return fullName;
+	public String getName() {
+		return name;
 	}
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
+	public void setName(String name) {
+		this.name = name;
 	}
 
-	public String getEmailAddress() {
-		return emailAddress;
+	public String getMail() {
+		return mail;
 	}
 
-	public void setEmailAddress(String emailAddress) {
-		this.emailAddress = emailAddress;
-	}
-
-	public String getZipCode() {
-		return zipCode;
-	}
-
-	public void setZipCode(String zipCode) {
-		this.zipCode = zipCode;
-	}
-
-	public Date getDateOfBirth() {
-		return dateOfBirth;
-	}
-
-	public void setDateOfBirth(Date dateOfBirth) {
-		this.dateOfBirth = dateOfBirth;
-	}
-
-	public String getFavoriteColor() {
-		return favoriteColor;
-	}
-
-	public void setFavoriteColor(String favoriteColor) {
-		this.favoriteColor = favoriteColor;
+	public void setMail(String mail) {
+		this.mail = mail;
 	}
 
 }

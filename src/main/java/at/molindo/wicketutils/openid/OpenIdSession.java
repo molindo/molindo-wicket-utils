@@ -39,6 +39,9 @@ import org.openid4java.message.AuthSuccess;
 import org.openid4java.message.MessageException;
 import org.openid4java.message.MessageExtension;
 import org.openid4java.message.ParameterList;
+import org.openid4java.message.ax.AxMessage;
+import org.openid4java.message.ax.FetchRequest;
+import org.openid4java.message.ax.FetchResponse;
 import org.openid4java.message.sreg.SRegMessage;
 import org.openid4java.message.sreg.SRegRequest;
 import org.openid4java.message.sreg.SRegResponse;
@@ -80,14 +83,37 @@ public class OpenIdSession implements IClusterable {
 				details.setOpenId(verifiedIdentifier.getIdentifier());
 
 				// try to get additional details
-				MessageExtension extension = authSuccess.getExtension(SRegMessage.OPENID_NS_SREG);
-				if (extension instanceof SRegResponse) {
-					SRegResponse sRegResponse = (SRegResponse) extension;
-					details.setEmailAddress(sRegResponse.getAttributeValue("email"));
-					details.setFullName(sRegResponse.getAttributeValue("fullname"));
+				if (authSuccess.hasExtension(AxMessage.OPENID_NS_AX)) {
+					MessageExtension ext = authSuccess.getExtension(AxMessage.OPENID_NS_AX);
 
+					if (ext instanceof FetchResponse) {
+						FetchResponse fetchResp = (FetchResponse) ext;
+
+						details.setMail(fetchResp.getAttributeValue("email"));
+
+						String fullname = fetchResp.getAttributeValue("fullname");
+						if (fullname == null) {
+							String firstname = fetchResp.getAttributeValue("firstname");
+							String lastname = fetchResp.getAttributeValue("lastname");
+
+							if (firstname == null) {
+								fullname = lastname == null ? null : lastname;
+							} else if (lastname != null) {
+								fullname = firstname + " " + lastname;
+							} else {
+								fullname = firstname;
+							}
+						}
+						details.setName(fullname);
+					}
+				} else if (authSuccess.hasExtension(SRegMessage.OPENID_NS_SREG)) {
+					MessageExtension extension = authSuccess.getExtension(SRegMessage.OPENID_NS_SREG);
+					if (extension instanceof SRegResponse) {
+						SRegResponse sRegResponse = (SRegResponse) extension;
+						details.setMail(sRegResponse.getAttributeValue("email"));
+						details.setName(sRegResponse.getAttributeValue("fullname"));
+					}
 				}
-
 				getWebSession().onOpenIdAuthSuccess(details);
 			} else {
 				getWebSession().onOpenIdAuthError();
@@ -127,25 +153,36 @@ public class OpenIdSession implements IClusterable {
 	public void redirect(String openId) {
 		discoveryInformation = performDiscovery(openId);
 
-		OpenIdSession session = OpenIdSession.get();
+		AuthRequest authRequest = createOpenIdAuthRequest();
 
-		AuthRequest authRequest = createOpenIdAuthRequest(discoveryInformation, session.getOpenIdReturnUrl());
-
-		// Now take the AuthRequest and forward it on to the OP
 		RequestCycle.get().setRedirect(false);
 		WicketUtils.getResponse().redirect(authRequest.getDestinationUrl(true));
 	}
 
-	private AuthRequest createOpenIdAuthRequest(DiscoveryInformation discoveryInformation, String returnToUrl) {
+	private AuthRequest createOpenIdAuthRequest() {
 		try {
-			AuthRequest ret = OpenIdSession.get().getConsumerManager().authenticate(discoveryInformation, returnToUrl);
+			ConsumerManager consumerManager = OpenIdSession.get().getConsumerManager();
 
-			SRegRequest sRegRequest = SRegRequest.createFetchRequest();
-			sRegRequest.addAttribute("email", false);
-			sRegRequest.addAttribute("fullname", false);
-			ret.addExtension(sRegRequest);
+			AuthRequest auth = consumerManager.authenticate(discoveryInformation, OpenIdSession.get()
+					.getOpenIdReturnUrl());
 
-			return ret;
+			if (discoveryInformation.getTypes().contains(AxMessage.OPENID_NS_AX)) {
+				FetchRequest fetch = FetchRequest.createFetchRequest();
+				fetch.addAttribute("email", "http://axschema.org/contact/email", true);
+				fetch.addAttribute("fullname", "http://axschema.org/namePerson", false);
+				fetch.addAttribute("firstname", "http://axschema.org/namePerson/first", false);
+				fetch.addAttribute("lastname", "http://axschema.org/namePerson/last", false);
+				auth.addExtension(fetch);
+			} else if (discoveryInformation.getTypes().contains(SRegMessage.OPENID_NS_SREG)) {
+				SRegRequest sregReq = SRegRequest.createFetchRequest();
+
+				sregReq.addAttribute("fullname", true);
+				sregReq.addAttribute("email", true);
+
+				auth.addExtension(sregReq);
+			}
+
+			return auth;
 		} catch (MessageException e) {
 			throw new WicketRuntimeException("failed to create OpenID AuthRequest", e);
 		} catch (ConsumerException e) {
