@@ -1,0 +1,150 @@
+/**
+ * Copyright 2010 Molindo GmbH
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package at.molindo.wicketutils.utils;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Enumeration;
+import java.util.Locale;
+
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+
+import org.apache.wicket.Application;
+import org.apache.wicket.Page;
+import org.apache.wicket.RequestCycle;
+import org.apache.wicket.Session;
+import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.model.StringResourceModel;
+import org.apache.wicket.protocol.http.IWebApplicationFactory;
+import org.apache.wicket.protocol.http.MockServletContext;
+import org.apache.wicket.protocol.http.WebApplication;
+import org.apache.wicket.protocol.http.WicketFilter;
+import org.junit.Test;
+
+public class MockUtilsTest {
+
+	@Test
+	public void withSession() throws Exception {
+		WebApplication testApp = new TestApp();
+		testApp.setWicketFilter(newMockFilter(testApp));
+
+		assertFalse(Application.exists());
+		assertFalse(Session.exists());
+		assertFalse(RequestCycle.get() != null);
+
+		String stringResource = MockUtils.withRequest(testApp, new MockRequestCallback<String>() {
+
+			@Override
+			public String call() {
+				// some basic testing
+				assertTrue(Application.exists());
+				assertTrue(Session.exists());
+				assertTrue(RequestCycle.get() != null);
+
+				return new StringResourceModel("someResource", null, "default value").getString();
+			}
+
+		});
+		assertEquals("default value", stringResource);
+
+		String url = MockUtils.withRequest(testApp, new MockRequestCallback<String>() {
+
+			@Override
+			public String call() {
+				return RequestCycle.get().urlFor(WebPage.class, null).toString();
+			}
+
+		});
+		assertEquals("./", url);
+
+		Locale locale = MockUtils.withRequest(testApp, new IMockRequestCallback<Locale>() {
+
+			@Override
+			public void configure(MockRequest request) {
+				request.setLocale(Locale.GERMAN);
+			}
+
+			@Override
+			public Locale call() {
+				return Session.get().getLocale();
+			}
+
+		});
+		assertEquals(Locale.GERMAN, locale);
+
+		assertFalse(Application.exists());
+		assertFalse(Session.exists());
+		assertFalse(RequestCycle.get() != null);
+	}
+
+	private WicketFilter newMockFilter(final WebApplication application) {
+		final MockServletContext context = new MockServletContext(application, "/");
+		final WicketFilter filter = new WicketFilter() {
+			@Override
+			protected IWebApplicationFactory getApplicationFactory() {
+				return new IWebApplicationFactory() {
+					@Override
+					public WebApplication createApplication(WicketFilter filter) {
+						return application;
+					};
+				};
+			}
+		};
+
+		try {
+			filter.init(new FilterConfig() {
+
+				@Override
+				public ServletContext getServletContext() {
+					return context;
+				}
+
+				@Override
+				public Enumeration<?> getInitParameterNames() {
+					return null;
+				}
+
+				@Override
+				public String getInitParameter(String name) {
+					return null;
+				}
+
+				@Override
+				public String getFilterName() {
+					return "WicketMockServlet";
+				}
+			});
+		} catch (ServletException e) {
+			throw new RuntimeException(e);
+		}
+
+		return filter;
+	}
+
+	public static class TestApp extends WebApplication {
+
+		@Override
+		public Class<? extends Page> getHomePage() {
+			return WebPage.class;
+		}
+
+	}
+}
