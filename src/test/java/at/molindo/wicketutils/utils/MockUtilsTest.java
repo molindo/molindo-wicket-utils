@@ -20,12 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.Enumeration;
 import java.util.Locale;
-
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 
 import org.apache.wicket.Application;
 import org.apache.wicket.Page;
@@ -33,10 +28,7 @@ import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Session;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.protocol.http.IWebApplicationFactory;
-import org.apache.wicket.protocol.http.MockServletContext;
 import org.apache.wicket.protocol.http.WebApplication;
-import org.apache.wicket.protocol.http.WicketFilter;
 import org.junit.Test;
 
 public class MockUtilsTest {
@@ -44,7 +36,7 @@ public class MockUtilsTest {
 	@Test
 	public void withSession() throws Exception {
 		WebApplication testApp = new TestApp();
-		testApp.setWicketFilter(newMockFilter(testApp));
+		testApp.setWicketFilter(MockUtils.newMockFilter(testApp));
 
 		assertFalse(Application.exists());
 		assertFalse(Session.exists());
@@ -93,50 +85,6 @@ public class MockUtilsTest {
 		assertFalse(Application.exists());
 		assertFalse(Session.exists());
 		assertFalse(RequestCycle.get() != null);
-	}
-
-	private WicketFilter newMockFilter(final WebApplication application) {
-		final MockServletContext context = new MockServletContext(application, "/");
-		final WicketFilter filter = new WicketFilter() {
-			@Override
-			protected IWebApplicationFactory getApplicationFactory() {
-				return new IWebApplicationFactory() {
-					@Override
-					public WebApplication createApplication(WicketFilter filter) {
-						return application;
-					};
-				};
-			}
-		};
-
-		try {
-			filter.init(new FilterConfig() {
-
-				@Override
-				public ServletContext getServletContext() {
-					return context;
-				}
-
-				@Override
-				public Enumeration<?> getInitParameterNames() {
-					return null;
-				}
-
-				@Override
-				public String getInitParameter(String name) {
-					return null;
-				}
-
-				@Override
-				public String getFilterName() {
-					return "WicketMockServlet";
-				}
-			});
-		} catch (ServletException e) {
-			throw new RuntimeException(e);
-		}
-
-		return filter;
 	}
 
 	public static class TestApp extends WebApplication {

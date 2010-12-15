@@ -16,21 +16,27 @@
 
 package at.molindo.wicketutils.utils;
 
+import java.util.Enumeration;
 import java.util.Locale;
 
+import javax.servlet.FilterConfig;
 import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.Application;
 import org.apache.wicket.Session;
+import org.apache.wicket.protocol.http.IWebApplicationFactory;
 import org.apache.wicket.protocol.http.MockHttpServletRequest;
 import org.apache.wicket.protocol.http.MockHttpServletResponse;
 import org.apache.wicket.protocol.http.MockHttpSession;
+import org.apache.wicket.protocol.http.MockServletContext;
 import org.apache.wicket.protocol.http.VisibilityHelper;
 import org.apache.wicket.protocol.http.WebApplication;
 import org.apache.wicket.protocol.http.WebRequest;
 import org.apache.wicket.protocol.http.WebRequestCycle;
 import org.apache.wicket.protocol.http.WebResponse;
+import org.apache.wicket.protocol.http.WicketFilter;
 
 import at.molindo.wicketutils.utils.IMockRequestCallback.MockRequest;
 
@@ -123,5 +129,49 @@ public class MockUtils {
 						"Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7) Gecko/20040707 Firefox/0.9.2");
 			}
 		}
+	}
+
+	public static WicketFilter newMockFilter(final WebApplication application) {
+		final MockServletContext context = new MockServletContext(application, "/");
+		final WicketFilter filter = new WicketFilter() {
+			@Override
+			protected IWebApplicationFactory getApplicationFactory() {
+				return new IWebApplicationFactory() {
+					@Override
+					public WebApplication createApplication(WicketFilter filter) {
+						return application;
+					};
+				};
+			}
+		};
+
+		try {
+			filter.init(new FilterConfig() {
+
+				@Override
+				public ServletContext getServletContext() {
+					return context;
+				}
+
+				@Override
+				public Enumeration<?> getInitParameterNames() {
+					return null;
+				}
+
+				@Override
+				public String getInitParameter(String name) {
+					return null;
+				}
+
+				@Override
+				public String getFilterName() {
+					return "WicketMockServlet";
+				}
+			});
+		} catch (ServletException e) {
+			throw new RuntimeException(e);
+		}
+
+		return filter;
 	}
 }
