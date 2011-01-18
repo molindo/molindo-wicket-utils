@@ -71,16 +71,16 @@ public abstract class PageSpec {
 		return _bookmarkable;
 	}
 
-	public void setResponsePage(boolean redirect) {
+	public void setAsResponsePage(boolean redirect) {
 
 		RequestCycle rc = RequestCycle.get();
 		if (rc == null) {
 			throw new WicketRuntimeException("no request cycle available");
 		}
-		setResponsePage(rc, redirect);
+		setAsResponsePage(rc, redirect);
 	}
 
-	public void setResponsePage(@Nonnull RequestCycle rc, boolean redirect) {
+	public void setAsResponsePage(@Nonnull RequestCycle rc, boolean redirect) {
 		if (rc == null) {
 			throw new NullPointerException("rc");
 		}
