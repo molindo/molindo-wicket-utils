@@ -41,6 +41,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.protocol.http.BufferedWebResponse;
 import org.apache.wicket.protocol.http.RequestUtils;
 import org.apache.wicket.protocol.http.WebRequest;
+import org.apache.wicket.protocol.http.WebRequestCycle;
 import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
 import org.apache.wicket.protocol.http.servlet.AbortWithHttpStatusException;
@@ -243,12 +244,20 @@ public final class WicketUtils {
 		return buf.toString();
 	}
 
+	/**
+	 * @return may return null
+	 */
 	public static HttpServletRequest getHttpServletRequest() {
-		return getWebRequest().getHttpServletRequest();
+		WebRequest wr = getWebRequest();
+		return wr == null ? null : wr.getHttpServletRequest();
 	}
 
+	/**
+	 * @return may return null
+	 */
 	public static HttpServletResponse getHttpServletResponse() {
-		return getWebResponse().getHttpServletResponse();
+		WebResponse wr = getWebResponse();
+		return wr == null ? null : wr.getHttpServletResponse();
 	}
 
 	public static String getRemoteAddr() {
@@ -273,6 +282,11 @@ public final class WicketUtils {
 	public static WebRequest getWebRequest() {
 		final Request request = getRequest();
 		return request instanceof WebRequest ? (WebRequest) request : null;
+	}
+
+	public static WebRequestCycle getWebRequestCycle() {
+		final RequestCycle rc = RequestCycle.get();
+		return rc instanceof WebRequestCycle ? (WebRequestCycle) rc : null;
 	}
 
 	/**
@@ -391,5 +405,18 @@ public final class WicketUtils {
 	public static void performRedirect(final Class<? extends Page> pageClass, final PageParameters parameters,
 			final int statusCode) {
 		performRedirect(toAbsolutePath(pageClass, parameters), statusCode);
+	}
+
+	public static URL toUrl(final Class<? extends Page> pageClass) {
+		return toUrl(pageClass, null);
+	}
+
+	public static URL toUrl(final Class<? extends Page> pageClass, final PageParameters params) {
+		final String url = toAbsolutePath(pageClass, params);
+		try {
+			return new URL(url);
+		} catch (final MalformedURLException e) {
+			throw new WicketRuntimeException("failed to create URL from " + url, e);
+		}
 	}
 }
