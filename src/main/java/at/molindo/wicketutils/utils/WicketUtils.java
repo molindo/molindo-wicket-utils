@@ -45,6 +45,7 @@ import org.apache.wicket.protocol.http.WebRequestCycle;
 import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
 import org.apache.wicket.protocol.http.servlet.AbortWithHttpStatusException;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.IRequestCycleProcessor;
 import org.apache.wicket.request.RequestParameters;
 import org.apache.wicket.request.target.component.BookmarkablePageRequestTarget;
@@ -417,6 +418,19 @@ public final class WicketUtils {
 			return new URL(url);
 		} catch (final MalformedURLException e) {
 			throw new WicketRuntimeException("failed to create URL from " + url, e);
+		}
+	}
+
+	/**
+	 * @return <code>true</code> if header "Wicket-Ajax" is set
+	 * @see ServletWebRequest#isAjax()
+	 */
+	public static boolean isAjax() {
+		Request req = getRequest();
+		if (req instanceof ServletWebRequest) {
+			return ((ServletWebRequest) req).isAjax();
+		} else {
+			return false;
 		}
 	}
 }
