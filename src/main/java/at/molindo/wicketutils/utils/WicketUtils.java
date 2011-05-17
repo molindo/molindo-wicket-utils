@@ -24,6 +24,7 @@ import java.util.Map;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.apache.wicket.IRequestTarget;
@@ -259,6 +260,14 @@ public final class WicketUtils {
 	public static HttpServletResponse getHttpServletResponse() {
 		WebResponse wr = getWebResponse();
 		return wr == null ? null : wr.getHttpServletResponse();
+	}
+
+	/**
+	 * @return may return null
+	 */
+	public static HttpSession getHttpSession() {
+		HttpServletRequest r = getHttpServletRequest();
+		return r == null ? null : r.getSession();
 	}
 
 	public static String getRemoteAddr() {
