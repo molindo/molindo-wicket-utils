@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.wicket.Application;
 import org.apache.wicket.IRequestTarget;
 import org.apache.wicket.Page;
 import org.apache.wicket.PageParameters;
@@ -441,5 +442,10 @@ public final class WicketUtils {
 		} else {
 			return false;
 		}
+	}
+
+	public static boolean isDeployment() {
+		// should this be cached?
+		return Application.DEPLOYMENT.equals(Application.get().getConfigurationType());
 	}
 }
