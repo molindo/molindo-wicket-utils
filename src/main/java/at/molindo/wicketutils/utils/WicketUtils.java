@@ -407,10 +407,18 @@ public final class WicketUtils {
 		return RequestUtils.toAbsolutePath(RequestCycle.get().urlFor(pageClass, parameters).toString());
 	}
 
+	public static void performTemporaryRedirect(String targetURL) {
+		performRedirect(targetURL, HttpServletResponse.SC_MOVED_TEMPORARILY);
+	}
+
+	public static void performPermanentRedirect(String targetURL) {
+		performRedirect(targetURL, HttpServletResponse.SC_MOVED_PERMANENTLY);
+	}
+
 	public static void performRedirect(final String targetURL, final int statusCode) {
 		final BufferedWebResponse response = (BufferedWebResponse) RequestCycle.get().getResponse();
 		response.getHttpServletResponse().setHeader("Location", targetURL);
-		throw new AbortWithHttpStatusException(HttpServletResponse.SC_MOVED_PERMANENTLY, true);
+		throw new AbortWithHttpStatusException(statusCode, true);
 	}
 
 	public static void performRedirect(final Class<? extends Page> pageClass, final PageParameters parameters,
