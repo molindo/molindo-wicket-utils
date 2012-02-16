@@ -25,6 +25,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.Application;
+import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Session;
 import org.apache.wicket.protocol.http.IWebApplicationFactory;
 import org.apache.wicket.protocol.http.MockHttpServletRequest;
@@ -49,8 +50,29 @@ public class MockUtils {
 		return withRequest((WebApplication) Application.get(applicationKey), callback);
 	}
 
-	public static <V> V withRequest(WebApplication webApplication, IMockRequestCallback<V> callback) {
+	public static <V> V withRequestAndNewSession(WebApplication webApplication, IMockRequestCallback<V> callback) {
+		Session oldSession = Session.exists() ? Session.get() : null;
+		RequestCycle oldRequestCycle = RequestCycle.get();
+		try {
+			if (oldSession != null) {
+				Session.unset();
 
+			}
+			return withRequest(webApplication, callback);
+		} finally {
+			if (oldSession != null) {
+				Session.set(oldSession);
+			}
+			if (oldRequestCycle != null) {
+				org.apache.wicket.VisibilityHelper.set(oldRequestCycle);
+			}
+		}
+	}
+
+	/**
+	 * reuse an existing session if possible
+	 */
+	public static <V> V withRequest(WebApplication webApplication, IMockRequestCallback<V> callback) {
 		Application prevApplication = null;
 		final boolean setupSession = !Session.exists();
 		WebRequestCycle requestCycle = null;
