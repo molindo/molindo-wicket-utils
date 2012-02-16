@@ -27,6 +27,9 @@ import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Session;
+import org.apache.wicket.WicketRuntimeException;
+import org.apache.wicket.ajax.AjaxEventBehavior;
+import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.StringResourceModel;
@@ -114,6 +117,33 @@ public class MockUtilsTest {
 		});
 
 		assertEquals("Hello World", output);
+	}
+
+	@Test(expected = WicketRuntimeException.class)
+	public void renderStateful() {
+		WebApplication testApp = newTestApp();
+		testApp.getMarkupSettings().setStripWicketTags(true);
+		testApp.getMarkupSettings().setStripComments(true);
+
+		// throw WicketRuntimeException
+		MockUtils.withRequestAndNewSession(testApp, new MockRenderCallback() {
+
+			@Override
+			public void configure(MockRequest request) {
+			}
+
+			@Override
+			protected Component newComponent(String id) {
+				return new Label(id, "Hello World").add(new AjaxEventBehavior("on click") {
+					private static final long serialVersionUID = 1L;
+
+					@Override
+					protected void onEvent(AjaxRequestTarget target) {
+					}
+				});
+			}
+
+		});
 	}
 
 	public static class TestApp extends WebApplication {

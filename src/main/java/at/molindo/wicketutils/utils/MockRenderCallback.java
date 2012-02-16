@@ -16,25 +16,41 @@
 package at.molindo.wicketutils.utils;
 
 import org.apache.wicket.Component;
-import org.apache.wicket.protocol.http.BufferedWebResponse;
+import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.protocol.http.MockHttpServletResponse;
 
 public abstract class MockRenderCallback implements IMockRequestCallback<String> {
 
+	private boolean _failOnStatefulPages = true;
+
 	@Override
 	public final String call() {
+		// add component to mock page
 		MockRenderPage page = new MockRenderPage();
 		Component component = newComponent("mock");
 		page.add(component);
-		try {
-			page.renderPage();
 
-			((BufferedWebResponse) WicketUtils.getWebResponse()).close();
-			return ((MockHttpServletResponse) WicketUtils.getWebResponse().getHttpServletResponse()).getDocument();
-		} finally {
+		// render page
+		page.renderPage();
+
+		if (isFailOnStatefulPages() && !page.isPageStateless()) {
+			throw new WicketRuntimeException("no stateful components allowed");
 		}
+
+		// close response and get output
+		WicketUtils.getWebResponse().close();
+		return ((MockHttpServletResponse) WicketUtils.getWebResponse().getHttpServletResponse()).getDocument();
 	}
 
 	protected abstract Component newComponent(String id);
+
+	public boolean isFailOnStatefulPages() {
+		return _failOnStatefulPages;
+	}
+
+	public MockRenderCallback setFailOnStatefulPages(boolean failOnStatefulPages) {
+		_failOnStatefulPages = failOnStatefulPages;
+		return this;
+	}
 
 }
