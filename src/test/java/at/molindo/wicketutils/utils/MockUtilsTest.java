@@ -98,6 +98,7 @@ public class MockUtilsTest {
 	public void render() {
 		WebApplication testApp = newTestApp();
 		testApp.getMarkupSettings().setStripWicketTags(true);
+		testApp.getMarkupSettings().setStripComments(true);
 
 		String output = MockUtils.withRequestAndNewSession(testApp, new MockRenderCallback() {
 
