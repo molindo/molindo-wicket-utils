@@ -23,15 +23,9 @@ import static org.junit.Assert.assertTrue;
 import java.util.Locale;
 
 import org.apache.wicket.Application;
-import org.apache.wicket.Component;
-import org.apache.wicket.Page;
 import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Session;
-import org.apache.wicket.WicketRuntimeException;
-import org.apache.wicket.ajax.AjaxEventBehavior;
-import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebPage;
-import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.protocol.http.WebApplication;
 import org.junit.Test;
@@ -40,7 +34,7 @@ public class MockUtilsTest {
 
 	@Test
 	public void withSession() throws Exception {
-		WebApplication testApp = newTestApp();
+		WebApplication testApp = DummyApplication.newApp();
 
 		assertFalse(Application.exists());
 		assertFalse(Session.exists());
@@ -91,67 +85,4 @@ public class MockUtilsTest {
 		assertFalse(RequestCycle.get() != null);
 	}
 
-	public WebApplication newTestApp() {
-		WebApplication testApp = new TestApp();
-		testApp.setWicketFilter(MockUtils.newMockFilter(testApp));
-		return testApp;
-	}
-
-	@Test
-	public void render() {
-		WebApplication testApp = newTestApp();
-		testApp.getMarkupSettings().setStripWicketTags(true);
-		testApp.getMarkupSettings().setStripComments(true);
-
-		String output = MockUtils.withRequestAndNewSession(testApp, new MockRenderCallback() {
-
-			@Override
-			public void configure(MockRequest request) {
-			}
-
-			@Override
-			protected Component newComponent(String id) {
-				return new Label(id, "Hello World");
-			}
-
-		});
-
-		assertEquals("Hello World", output);
-	}
-
-	@Test(expected = WicketRuntimeException.class)
-	public void renderStateful() {
-		WebApplication testApp = newTestApp();
-		testApp.getMarkupSettings().setStripWicketTags(true);
-		testApp.getMarkupSettings().setStripComments(true);
-
-		// throw WicketRuntimeException
-		MockUtils.withRequestAndNewSession(testApp, new MockRenderCallback() {
-
-			@Override
-			public void configure(MockRequest request) {
-			}
-
-			@Override
-			protected Component newComponent(String id) {
-				return new Label(id, "Hello World").add(new AjaxEventBehavior("on click") {
-					private static final long serialVersionUID = 1L;
-
-					@Override
-					protected void onEvent(AjaxRequestTarget target) {
-					}
-				});
-			}
-
-		});
-	}
-
-	public static class TestApp extends WebApplication {
-
-		@Override
-		public Class<? extends Page> getHomePage() {
-			return WebPage.class;
-		}
-
-	}
 }

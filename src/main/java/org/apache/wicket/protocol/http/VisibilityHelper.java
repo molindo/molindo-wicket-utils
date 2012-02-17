@@ -20,20 +20,31 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
- * class to overcome package and protected visibility
+ * utility to call methods with package visibility in
+ * org.apache.wicket.protocol.http
  */
 public class VisibilityHelper {
+
 	private VisibilityHelper() {
 	}
 
+	/**
+	 * @see WebApplication#newWebRequest(HttpServletRequest)
+	 */
 	public static WebRequest newWebRequest(WebApplication webApplication, HttpServletRequest servletRequest) {
 		return webApplication.newWebRequest(servletRequest);
 	}
 
+	/**
+	 * @see WebApplication#newWebResponse(HttpServletResponse)
+	 */
 	public static WebResponse newWebResponse(WebApplication webApplication, HttpServletResponse servletResponse) {
 		return webApplication.newWebResponse(servletResponse);
 	}
 
+	/**
+	 * @see WebRequestCycle#unset()
+	 */
 	public static void unset(WebRequestCycle requestCycle) {
 		requestCycle.unset();
 	}

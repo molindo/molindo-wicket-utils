@@ -46,17 +46,23 @@ public class MockUtils {
 	private MockUtils() {
 	}
 
-	public static <V> V withRequest(String applicationKey, IMockRequestCallback<V> callback) {
-		return withRequest((WebApplication) Application.get(applicationKey), callback);
-	}
-
-	public static <V> V withRequestAndNewSession(WebApplication webApplication, IMockRequestCallback<V> callback) {
+	/**
+	 * unset request and session to force mocking
+	 */
+	public static <V> V withNewRequest(WebApplication webApplication, IMockRequestCallback<V> callback) {
+		/*
+		 * typically, if ther is a RequestCycle, there is a Session and vice
+		 * versa.
+		 */
 		Session oldSession = Session.exists() ? Session.get() : null;
 		RequestCycle oldRequestCycle = RequestCycle.get();
+
 		try {
 			if (oldSession != null) {
 				Session.unset();
-
+			}
+			if (oldRequestCycle != null) {
+				org.apache.wicket.VisibilityHelper.set(null);
 			}
 			return withRequest(webApplication, callback);
 		} finally {
@@ -67,6 +73,10 @@ public class MockUtils {
 				org.apache.wicket.VisibilityHelper.set(oldRequestCycle);
 			}
 		}
+	}
+
+	public static <V> V withRequest(String applicationKey, IMockRequestCallback<V> callback) {
+		return withRequest((WebApplication) Application.get(applicationKey), callback);
 	}
 
 	/**

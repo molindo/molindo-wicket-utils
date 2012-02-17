@@ -13,20 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.wicket;
+package at.molindo.wicketutils.utils;
 
-/**
- * utility to call methods with package visibility in org.apache.wicket
- */
-public class VisibilityHelper {
+import org.apache.wicket.Page;
+import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.protocol.http.WebApplication;
 
-	private VisibilityHelper() {
+public class DummyApplication extends WebApplication {
+
+	public static WebApplication newApp() {
+		WebApplication testApp = new DummyApplication();
+		testApp.setWicketFilter(MockUtils.newMockFilter(testApp));
+		return testApp;
 	}
 
-	/**
-	 * @see RequestCycle#set(RequestCycle)
-	 */
-	public static void set(RequestCycle requestCycle) {
-		RequestCycle.set(requestCycle);
+	@Override
+	public Class<? extends Page> getHomePage() {
+		return WebPage.class;
 	}
+
 }
