@@ -134,16 +134,12 @@ public class OpenIdSession implements IClusterable {
 		if (consumerManager == null) {
 			// double checked locking
 			synchronized (CONSUMER_MANAGER_KEY) {
-				try {
-					consumerManager = app.getMetaData(CONSUMER_MANAGER_KEY);
-					if (consumerManager == null) {
-						consumerManager = new ConsumerManager();
-						consumerManager.setAssociations(new InMemoryConsumerAssociationStore());
-						consumerManager.setNonceVerifier(new InMemoryNonceVerifier(10000));
-						app.setMetaData(CONSUMER_MANAGER_KEY, consumerManager);
-					}
-				} catch (ConsumerException e) {
-					throw new RuntimeException("failed to create ConsumerManager", e);
+				consumerManager = app.getMetaData(CONSUMER_MANAGER_KEY);
+				if (consumerManager == null) {
+					consumerManager = new ConsumerManager();
+					consumerManager.setAssociations(new InMemoryConsumerAssociationStore());
+					consumerManager.setNonceVerifier(new InMemoryNonceVerifier(10000));
+					app.setMetaData(CONSUMER_MANAGER_KEY, consumerManager);
 				}
 			}
 		}
