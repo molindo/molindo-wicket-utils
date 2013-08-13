@@ -1,0 +1,32 @@
+# deploy Maven artifacts to Sonatype OSS repo
+language: java
+
+jdk:
+  - openjdk6
+
+# whitelist
+branches:
+  only:
+    - master
+
+# checkout settings
+before_install: 
+  - "git clone -b master https://github.com/molindo/travis-settings.git target/travis-settings"
+  - "target/travis-settings/tasks/before_install.sh"
+
+# install and deploy
+install: "target/travis-settings/tasks/install.sh"
+script:  "target/travis-settings/tasks/script.sh"
+
+# travis encrypt 'token@room'
+notifications:
+  hipchat: 
+    rooms:
+      - secure: "cJ5HmHpeiaaFUw4fFrPTT4gZa1foWEkbYS83TsufSyr+gs/8FIt95++XwHKoiYqVGbG9J1BiOyC9hZeN4Pg9fOnBwbij50qHc1PFwpGUEu3MX68sx8+63NWAP9oVoggF/2pekeVaum4PgcHjPT0Wh6WHMToF1W4A8/rqLcSIde0="
+
+# travis encrypt 'CI_DEPLOY_USERNAME=username'
+# travis encrypt 'CI_DEPLOY_PASSWORD=password'
+env:
+  global:
+    - secure: "Gsux4dxTwFe3ueEQjyq3TWIikE52ktxen1DamydrSaAvsqyaayJYqhSNs4uyBj3Rv3RR1nh8qjvLJHwj5xeDZ+mpAvVk0D03g6ls6bB8hqWwX11ToIcS4sLA7J5FWYBgASBEBg7dvnymPkJ0YyNQvYW7rrWC1c5AdeTW0534laE="
+    - secure: "ETBE3/XHAH7DEW7jIuXSu7XWuHs/6TzpnSw9QB1sVu+lB4FIDHmvHguV4TsMvYK4JOAYl1g5AWmnsbPFlLhjCJf2ZM33MDkVEfgTZKcwYpGeBj7vcLRAMm4ho+vAJp/4ZWv69EguvM2u01S59c1hjSdwUsK0G2y5fshi3c+AW28="
