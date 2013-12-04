@@ -85,7 +85,7 @@ public class MockUtilsTest {
 			assertFalse(Session.exists());
 			assertFalse(RequestCycle.get() != null);
 		} finally {
-			testApp.close();
+			testApp.destroy();
 		}
 	}
 

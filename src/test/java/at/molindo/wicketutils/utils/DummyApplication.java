@@ -19,7 +19,7 @@ import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.protocol.http.WebApplication;
 
-public class DummyApplication extends WebApplication implements AutoCloseable {
+public class DummyApplication extends WebApplication {
 
 	/**
 	 * use {@link #DummyApplication()}
@@ -38,8 +38,7 @@ public class DummyApplication extends WebApplication implements AutoCloseable {
 		return HomePage.class;
 	}
 
-	@Override
-	public void close() {
+	public void destroy() {
 		getWicketFilter().destroy();
 	}
 

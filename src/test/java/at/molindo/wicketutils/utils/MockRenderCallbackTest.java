@@ -48,7 +48,7 @@ public class MockRenderCallbackTest {
 
 			assertEquals("Hello World", output);
 		} finally {
-			testApp.close();
+			testApp.destroy();
 		}
 	}
 
@@ -79,7 +79,7 @@ public class MockRenderCallbackTest {
 
 			});
 		} finally {
-			testApp.close();
+			testApp.destroy();
 		}
 	}
 }
