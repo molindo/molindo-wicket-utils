@@ -17,7 +17,7 @@ package at.molindo.wicketutils.utils;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.WicketRuntimeException;
-import org.apache.wicket.protocol.http.MockHttpServletResponse;
+import org.apache.wicket.protocol.http.mock.MockHttpServletResponse;
 
 public abstract class MockRenderCallback implements IMockRequestCallback<String> {
 
@@ -39,7 +39,7 @@ public abstract class MockRenderCallback implements IMockRequestCallback<String>
 
 		// close response and get output
 		WicketUtils.getWebResponse().close();
-		return ((MockHttpServletResponse) WicketUtils.getWebResponse().getHttpServletResponse()).getDocument();
+		return ((MockHttpServletResponse) WicketUtils.getServletWebResponse().getContainerResponse()).getDocument();
 	}
 
 	protected abstract Component newComponent(String id);

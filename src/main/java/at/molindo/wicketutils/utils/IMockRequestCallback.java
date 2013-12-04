@@ -18,7 +18,7 @@ package at.molindo.wicketutils.utils;
 
 import java.util.Locale;
 
-import org.apache.wicket.protocol.http.MockHttpServletRequest;
+import org.apache.wicket.protocol.http.mock.MockHttpServletRequest;
 
 public interface IMockRequestCallback<V> {
 

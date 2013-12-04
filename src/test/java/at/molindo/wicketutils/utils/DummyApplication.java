@@ -19,17 +19,31 @@ import org.apache.wicket.Page;
 import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.protocol.http.WebApplication;
 
-public class DummyApplication extends WebApplication {
+public class DummyApplication extends WebApplication implements AutoCloseable {
 
+	/**
+	 * use {@link #DummyApplication()}
+	 */
+	@Deprecated
 	public static WebApplication newApp() {
-		WebApplication testApp = new DummyApplication();
-		testApp.setWicketFilter(MockUtils.newMockFilter(testApp));
-		return testApp;
+		return new DummyApplication();
+	}
+
+	public DummyApplication() {
+		setWicketFilter(MockUtils.newMockFilter(this));
 	}
 
 	@Override
 	public Class<? extends Page> getHomePage() {
-		return WebPage.class;
+		return HomePage.class;
 	}
 
+	@Override
+	public void close() {
+		getWicketFilter().destroy();
+	}
+
+	public static class HomePage extends WebPage {
+		private static final long serialVersionUID = 1L;
+	}
 }

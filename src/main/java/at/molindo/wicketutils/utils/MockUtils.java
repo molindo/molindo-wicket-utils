@@ -25,19 +25,18 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpSession;
 
 import org.apache.wicket.Application;
-import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Session;
+import org.apache.wicket.ThreadContext;
 import org.apache.wicket.protocol.http.IWebApplicationFactory;
-import org.apache.wicket.protocol.http.MockHttpServletRequest;
-import org.apache.wicket.protocol.http.MockHttpServletResponse;
-import org.apache.wicket.protocol.http.MockHttpSession;
-import org.apache.wicket.protocol.http.MockServletContext;
 import org.apache.wicket.protocol.http.VisibilityHelper;
 import org.apache.wicket.protocol.http.WebApplication;
-import org.apache.wicket.protocol.http.WebRequest;
-import org.apache.wicket.protocol.http.WebRequestCycle;
-import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.protocol.http.WicketFilter;
+import org.apache.wicket.protocol.http.mock.MockHttpServletRequest;
+import org.apache.wicket.protocol.http.mock.MockHttpServletResponse;
+import org.apache.wicket.protocol.http.mock.MockHttpSession;
+import org.apache.wicket.protocol.http.mock.MockServletContext;
+import org.apache.wicket.request.http.WebRequest;
+import org.apache.wicket.request.http.WebResponse;
 
 import at.molindo.wicketutils.utils.IMockRequestCallback.MockRequest;
 
@@ -50,28 +49,11 @@ public class MockUtils {
 	 * unset request and session to force mocking
 	 */
 	public static <V> V withNewRequest(WebApplication webApplication, IMockRequestCallback<V> callback) {
-		/*
-		 * typically, if ther is a RequestCycle, there is a Session and vice
-		 * versa.
-		 */
-		Session oldSession = Session.exists() ? Session.get() : null;
-		RequestCycle oldRequestCycle = RequestCycle.get();
-
+		ThreadContext oldContext = ThreadContext.detach();
 		try {
-			if (oldSession != null) {
-				Session.unset();
-			}
-			if (oldRequestCycle != null) {
-				org.apache.wicket.VisibilityHelper.set(null);
-			}
 			return withRequest(webApplication, callback);
 		} finally {
-			if (oldSession != null) {
-				Session.set(oldSession);
-			}
-			if (oldRequestCycle != null) {
-				org.apache.wicket.VisibilityHelper.set(oldRequestCycle);
-			}
+			ThreadContext.restore(oldContext);
 		}
 	}
 
@@ -83,45 +65,41 @@ public class MockUtils {
 	 * reuse an existing session if possible
 	 */
 	public static <V> V withRequest(WebApplication webApplication, IMockRequestCallback<V> callback) {
-		Application prevApplication = null;
-		final boolean setupSession = !Session.exists();
-		WebRequestCycle requestCycle = null;
+		Session oldSession = ThreadContext.exists() ? ThreadContext.getSession() : null;
+		ThreadContext oldContext = ThreadContext.detach();
 
 		try {
-			if (setupSession) {
-				if (Application.exists()) {
-					prevApplication = Application.get();
-				}
-				Application.set(webApplication);
+			ThreadContext.setApplication(webApplication);
+			ThreadContext.setSession(oldSession);
 
-				ServletContext context = webApplication.getServletContext();
-				MockHttpSession httpSession = new MockHttpSession(context);
+			// mock http session
+			ServletContext context = webApplication.getServletContext();
+			MockHttpSession httpSession = new MockHttpSession(context);
 
-				MockServletRequest servletRequest = new MockServletRequest(webApplication, httpSession, context);
-				callback.configure(new MockRequest(servletRequest));
-				servletRequest.setDefaultHeaders();
+			// mock servlet request
+			MockServletRequest servletRequest = new MockServletRequest(webApplication, httpSession, context);
+			callback.configure(new MockRequest(servletRequest));
+			servletRequest.setDefaultHeaders();
 
-				MockHttpServletResponse servletResponse = new MockHttpServletResponse(servletRequest);
+			// mock response
+			MockHttpServletResponse servletResponse = new MockHttpServletResponse(servletRequest);
 
-				final WebRequest request = VisibilityHelper.newWebRequest(webApplication, servletRequest);
-				final WebResponse response = VisibilityHelper.newWebResponse(webApplication, servletResponse);
+			// mock web request
+			final WebRequest request = VisibilityHelper.newWebRequest(webApplication, servletRequest, "/");
 
-				requestCycle = (WebRequestCycle) webApplication.newRequestCycle(request, response);
-				Session.findOrCreate(request, response);
-			}
+			// mock web response
+			final WebResponse response = VisibilityHelper.newWebResponse(webApplication, request, servletResponse);
+
+			// create
+			ThreadContext.setRequestCycle(webApplication.createRequestCycle(request, response));
+
 			return callback.call();
 		} finally {
-			if (setupSession) {
-				if (requestCycle != null) {
-					VisibilityHelper.unset(requestCycle);
-				}
-				Session.unset();
-
-				if (prevApplication != null) {
-					Application.set(prevApplication);
-				} else {
-					Application.unset();
-				}
+			Session newSession = ThreadContext.getSession();
+			ThreadContext.restore(oldContext);
+			if (oldSession == null && newSession != null && !newSession.isTemporary()) {
+				// reuse session if a new one was created
+				ThreadContext.setSession(newSession);
 			}
 		}
 	}
@@ -172,6 +150,11 @@ public class MockUtils {
 					@Override
 					public WebApplication createApplication(WicketFilter filter) {
 						return application;
+					}
+
+					@Override
+					public void destroy(WicketFilter filter) {
+						// noop
 					};
 				};
 			}

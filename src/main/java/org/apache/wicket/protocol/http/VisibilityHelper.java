@@ -19,6 +19,11 @@ package org.apache.wicket.protocol.http;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.wicket.ThreadContext;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.http.WebRequest;
+import org.apache.wicket.request.http.WebResponse;
+
 /**
  * utility to call methods with package visibility in
  * org.apache.wicket.protocol.http
@@ -31,22 +36,26 @@ public class VisibilityHelper {
 	/**
 	 * @see WebApplication#newWebRequest(HttpServletRequest)
 	 */
-	public static WebRequest newWebRequest(WebApplication webApplication, HttpServletRequest servletRequest) {
-		return webApplication.newWebRequest(servletRequest);
+	public static WebRequest newWebRequest(WebApplication webApplication, HttpServletRequest servletRequest,
+			String filterPath) {
+		return webApplication.newWebRequest(servletRequest, filterPath);
 	}
 
 	/**
 	 * @see WebApplication#newWebResponse(HttpServletResponse)
 	 */
-	public static WebResponse newWebResponse(WebApplication webApplication, HttpServletResponse servletResponse) {
-		return webApplication.newWebResponse(servletResponse);
+	public static WebResponse newWebResponse(WebApplication webApplication, WebRequest webRequest,
+			HttpServletResponse servletResponse) {
+		return webApplication.newWebResponse(webRequest, servletResponse);
 	}
 
 	/**
-	 * @see WebRequestCycle#unset()
+	 * @deprecated use {@link ThreadContext#setRequestCycle(RequestCycle)}
+	 *             directly
 	 */
-	public static void unset(WebRequestCycle requestCycle) {
-		requestCycle.unset();
+	@Deprecated
+	public static void unset(RequestCycle requestCycle) {
+		ThreadContext.setRequestCycle(null);
 	}
 
 }

@@ -19,9 +19,9 @@ package at.molindo.wicketutils.utils;
 import javax.annotation.Nonnull;
 
 import org.apache.wicket.Page;
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.RequestCycle;
 import org.apache.wicket.WicketRuntimeException;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 public abstract class PageSpec {
 
@@ -38,25 +38,16 @@ public abstract class PageSpec {
 	}
 
 	public static PageSpec get(Class<? extends Page> pageClass) {
-		return get(pageClass, null, null);
+		return get(pageClass, null);
 	}
 
-	public static PageSpec get(Class<? extends Page> pageClass, PageParameters params) {
-		return get(pageClass, params, null);
-	}
-
-	public static PageSpec get(final Class<? extends Page> pageClass, final PageParameters params,
-			final String pageMapName) {
+	public static PageSpec get(final Class<? extends Page> pageClass, final PageParameters params) {
 
 		return new PageSpec(true) {
 
 			@Override
 			protected void setResponsePage(RequestCycle rc) {
-				if (pageMapName == null) {
-					rc.setResponsePage(pageClass, params);
-				} else {
-					rc.setResponsePage(pageClass, params, pageMapName);
-				}
+				rc.setResponsePage(pageClass, params);
 			}
 		};
 	}
@@ -85,7 +76,6 @@ public abstract class PageSpec {
 			throw new NullPointerException("rc");
 		}
 		setResponsePage(rc);
-		rc.setRedirect(true);
 	}
 
 	protected abstract void setResponsePage(@Nonnull RequestCycle rc);

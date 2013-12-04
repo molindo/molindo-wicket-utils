@@ -57,7 +57,7 @@ public class OpenIdFormPanel extends Panel {
 				@Override
 				protected void onError(AjaxRequestTarget target) {
 					OpenIdForm.this.onError();
-					target.addComponent(OpenIdForm.this);
+					target.add(OpenIdForm.this);
 				}
 			});
 

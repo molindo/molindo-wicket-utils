@@ -22,57 +22,64 @@ import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.basic.Label;
-import org.apache.wicket.protocol.http.WebApplication;
 import org.junit.Test;
 
 public class MockRenderCallbackTest {
 
 	@Test
 	public void render() {
-		WebApplication testApp = DummyApplication.newApp();
-		testApp.getMarkupSettings().setStripWicketTags(true);
-		testApp.getMarkupSettings().setStripComments(true);
+		DummyApplication testApp = new DummyApplication();
+		try {
+			testApp.getMarkupSettings().setStripWicketTags(true);
+			testApp.getMarkupSettings().setStripComments(true);
 
-		String output = MockUtils.withNewRequest(testApp, new MockRenderCallback() {
+			String output = MockUtils.withNewRequest(testApp, new MockRenderCallback() {
 
-			@Override
-			public void configure(MockRequest request) {
-			}
+				@Override
+				public void configure(MockRequest request) {
+				}
 
-			@Override
-			protected Component newComponent(String id) {
-				return new Label(id, "Hello World");
-			}
+				@Override
+				protected Component newComponent(String id) {
+					return new Label(id, "Hello World");
+				}
 
-		});
+			});
 
-		assertEquals("Hello World", output);
+			assertEquals("Hello World", output);
+		} finally {
+			testApp.close();
+		}
 	}
 
 	@Test(expected = WicketRuntimeException.class)
 	public void renderStateful() {
-		WebApplication testApp = DummyApplication.newApp();
-		testApp.getMarkupSettings().setStripWicketTags(true);
-		testApp.getMarkupSettings().setStripComments(true);
+		DummyApplication testApp = new DummyApplication();
+		try {
+			testApp.getMarkupSettings().setStripWicketTags(true);
+			testApp.getMarkupSettings().setStripComments(true);
 
-		// throw WicketRuntimeException
-		MockUtils.withNewRequest(testApp, new MockRenderCallback() {
+			// throw WicketRuntimeException
+			MockUtils.withNewRequest(testApp, new MockRenderCallback() {
 
-			@Override
-			public void configure(MockRequest request) {
-			}
+				@Override
+				public void configure(MockRequest request) {
+				}
 
-			@Override
-			protected Component newComponent(String id) {
-				return new Label(id, "Hello World").add(new AjaxEventBehavior("on click") {
-					private static final long serialVersionUID = 1L;
+				@Override
+				protected Component newComponent(String id) {
+					return new Label(id, "Hello World").add(new AjaxEventBehavior("on click") {
+						private static final long serialVersionUID = 1L;
 
-					@Override
-					protected void onEvent(AjaxRequestTarget target) {
-					}
-				});
-			}
+						@Override
+						protected void onEvent(AjaxRequestTarget target) {
+						}
+					});
+				}
 
-		});
+			});
+		} finally {
+			testApp.close();
+		}
 	}
 }

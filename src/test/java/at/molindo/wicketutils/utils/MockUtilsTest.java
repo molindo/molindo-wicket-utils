@@ -23,66 +23,70 @@ import static org.junit.Assert.assertTrue;
 import java.util.Locale;
 
 import org.apache.wicket.Application;
-import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Session;
-import org.apache.wicket.markup.html.WebPage;
 import org.apache.wicket.model.StringResourceModel;
-import org.apache.wicket.protocol.http.WebApplication;
+import org.apache.wicket.request.cycle.RequestCycle;
 import org.junit.Test;
+
+import at.molindo.wicketutils.utils.DummyApplication.HomePage;
 
 public class MockUtilsTest {
 
 	@Test
 	public void withSession() throws Exception {
-		WebApplication testApp = DummyApplication.newApp();
+		DummyApplication testApp = new DummyApplication();
+		try {
 
-		assertFalse(Application.exists());
-		assertFalse(Session.exists());
-		assertFalse(RequestCycle.get() != null);
+			assertFalse(Application.exists());
+			assertFalse(Session.exists());
+			assertFalse(RequestCycle.get() != null);
 
-		String stringResource = MockUtils.withRequest(testApp, new MockRequestCallback<String>() {
+			String stringResource = MockUtils.withRequest(testApp, new MockRequestCallback<String>() {
 
-			@Override
-			public String call() {
-				// some basic testing
-				assertTrue(Application.exists());
-				assertTrue(Session.exists());
-				assertTrue(RequestCycle.get() != null);
+				@Override
+				public String call() {
+					// some basic testing
+					assertTrue(Application.exists());
+					assertFalse(Session.exists());
+					assertTrue(RequestCycle.get() != null);
 
-				return new StringResourceModel("someResource", null, "default value").getString();
-			}
+					return new StringResourceModel("someResource", null, "default value").getString();
+				}
 
-		});
-		assertEquals("default value", stringResource);
+			});
+			assertEquals("default value", stringResource);
 
-		String url = MockUtils.withRequest(testApp, new MockRequestCallback<String>() {
+			String url = MockUtils.withRequest(testApp, new MockRequestCallback<String>() {
 
-			@Override
-			public String call() {
-				return RequestCycle.get().urlFor(WebPage.class, null).toString();
-			}
+				@Override
+				public String call() {
+					return RequestCycle.get().urlFor(HomePage.class, null).toString();
+				}
 
-		});
-		assertEquals("./", url);
+			});
+			assertEquals("./.", url);
 
-		Locale locale = MockUtils.withRequest(testApp, new IMockRequestCallback<Locale>() {
+			Locale locale = MockUtils.withRequest(testApp, new IMockRequestCallback<Locale>() {
 
-			@Override
-			public void configure(MockRequest request) {
-				request.setLocale(Locale.GERMAN);
-			}
+				@Override
+				public void configure(MockRequest request) {
+					request.setLocale(Locale.GERMAN);
+				}
 
-			@Override
-			public Locale call() {
-				return Session.get().getLocale();
-			}
+				@Override
+				public Locale call() {
+					return Session.get().getLocale();
+				}
 
-		});
-		assertEquals(Locale.GERMAN, locale);
+			});
+			assertEquals(Locale.GERMAN, locale);
 
-		assertFalse(Application.exists());
-		assertFalse(Session.exists());
-		assertFalse(RequestCycle.get() != null);
+			assertFalse(Application.exists());
+			assertFalse(Session.exists());
+			assertFalse(RequestCycle.get() != null);
+		} finally {
+			testApp.close();
+		}
 	}
 
 }

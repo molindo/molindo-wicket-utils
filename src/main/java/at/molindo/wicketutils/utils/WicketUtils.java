@@ -18,41 +18,41 @@ package at.molindo.wicketutils.utils;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Locale;
-import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.List;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.commons.lang.NotImplementedException;
 import org.apache.wicket.Application;
-import org.apache.wicket.IRequestTarget;
 import org.apache.wicket.Page;
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.Request;
-import org.apache.wicket.RequestCycle;
-import org.apache.wicket.Response;
+import org.apache.wicket.RuntimeConfigurationType;
 import org.apache.wicket.Session;
+import org.apache.wicket.ThreadContext;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.markup.html.link.AbstractLink;
 import org.apache.wicket.markup.html.link.ExternalLink;
+import org.apache.wicket.mock.MockWebRequest;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.protocol.http.BufferedWebResponse;
 import org.apache.wicket.protocol.http.RequestUtils;
-import org.apache.wicket.protocol.http.WebRequest;
-import org.apache.wicket.protocol.http.WebRequestCycle;
-import org.apache.wicket.protocol.http.WebResponse;
 import org.apache.wicket.protocol.http.request.WebClientInfo;
-import org.apache.wicket.protocol.http.servlet.AbortWithHttpStatusException;
 import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
-import org.apache.wicket.request.IRequestCycleProcessor;
-import org.apache.wicket.request.RequestParameters;
-import org.apache.wicket.request.target.component.BookmarkablePageRequestTarget;
-import org.apache.wicket.request.target.component.IBookmarkablePageRequestTarget;
-import org.apache.wicket.util.value.ValueMap;
+import org.apache.wicket.protocol.http.servlet.ServletWebResponse;
+import org.apache.wicket.request.IRequestHandler;
+import org.apache.wicket.request.Request;
+import org.apache.wicket.request.Response;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.component.IRequestablePage;
+import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.handler.BookmarkablePageRequestHandler;
+import org.apache.wicket.request.http.WebRequest;
+import org.apache.wicket.request.http.WebResponse;
+import org.apache.wicket.request.http.handler.RedirectRequestHandler;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.mapper.parameter.PageParameters.NamedPair;
 
 public final class WicketUtils {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WicketUtils.class);
@@ -61,60 +61,61 @@ public final class WicketUtils {
 		// no instance
 	}
 
-	public static Class<? extends Page> getBookmarkablePage(final RequestCycle cycle) {
+	public static Class<? extends IRequestablePage> getBookmarkablePage(final RequestCycle cycle) {
 		if (cycle == null) {
 			return null;
 		}
 
-		final IRequestTarget target = cycle.getRequestTarget();
-		if (target instanceof BookmarkablePageRequestTarget) {
-			return ((BookmarkablePageRequestTarget) target).getPageClass();
+		final IRequestHandler handler = cycle.getActiveRequestHandler();
+		if (handler instanceof BookmarkablePageRequestHandler) {
+			return ((BookmarkablePageRequestHandler) handler).getPageClass();
 		}
 
 		return null;
 	}
 
 	public static boolean isBookmarkableRequest(final URL url) {
-		// if referer is one of our bookmarkable pages, suggest a link to that
-		// page
-		final IRequestTarget rt = getRequestTarget(url);
-		return rt instanceof IBookmarkablePageRequestTarget;
+		return getBookmarkableRequestHandler(url) != null;
 	}
 
-	public static Class<? extends Page> getBookmarkablePage(final URL url) {
-		final IRequestTarget rt = getRequestTarget(url);
-		if (rt instanceof IBookmarkablePageRequestTarget) {
-			final IBookmarkablePageRequestTarget target = (IBookmarkablePageRequestTarget) rt;
-			return target.getPageClass();
+	public static Class<? extends IRequestablePage> getBookmarkablePage(final URL url) {
+		final BookmarkablePageRequestHandler handler = getBookmarkableRequestHandler(url);
+		return handler == null ? null : handler.getPageClass();
+	}
+
+	/**
+	 * @deprecated use {@link #getBookmarkableRequestHandler(URL)}
+	 */
+	@Deprecated
+	public static BookmarkablePageRequestHandler getBookmarkableRequestTarget(final URL url) {
+		return getBookmarkableRequestHandler(url);
+	}
+
+	public static BookmarkablePageRequestHandler getBookmarkableRequestHandler(final URL url) {
+		final IRequestHandler handler = getRequestHandler(url);
+		if (handler instanceof BookmarkablePageRequestHandler) {
+			return (BookmarkablePageRequestHandler) handler;
 		} else {
 			return null;
 		}
 	}
 
-	public static IBookmarkablePageRequestTarget getBookmarkableRequestTarget(final URL url) {
-		final IRequestTarget rt = getRequestTarget(url);
-		if (rt instanceof IBookmarkablePageRequestTarget) {
-			return (IBookmarkablePageRequestTarget) rt;
-		} else {
-			return null;
-		}
+	/**
+	 * @deprecated use {@link #getRequestHandler(URL)}
+	 */
+	@Deprecated
+	public static IRequestHandler getRequestTarget(final URL url) {
+		return getRequestHandler(url);
 	}
 
-	public static IRequestTarget getRequestTarget(final URL url) {
+	public static IRequestHandler getRequestHandler(final URL url) {
 		if (url != null) {
-			final RequestCycle rc = RequestCycle.get();
-			final IRequestCycleProcessor processor = rc.getProcessor();
-			final RequestParameters requestParameters = processor.getRequestCodingStrategy().decode(
-					new UrlRequest(rc.getRequest(), url));
+			MockWebRequest request = new MockWebRequest(Url.parse(url.toString()));
 
-			try {
-				return processor.resolve(rc, requestParameters);
-			} catch (final WicketRuntimeException e) {
-				// ignore
-			}
-
+			return Application.get().getRootRequestMapper().mapRequest(request);
+		} else {
+			return null;
 		}
-		return null;
 	}
 
 	public static AbstractLink getBookmarkableRefererLink(final String id, final IModel<String> labelModel) {
@@ -136,101 +137,101 @@ public final class WicketUtils {
 		return getHttpServletRequest().getHeader("Referer");
 	}
 
-	public static class UrlRequest extends Request {
-		private final ValueMap params = new ValueMap();
-
-		private final Request realRequest;
-
-		private final URL url;
-
-		/**
-		 * Construct.
-		 * 
-		 * @param realRequest
-		 * @param url
-		 */
-		public UrlRequest(final Request realRequest, final URL url) {
-			this.realRequest = realRequest;
-			this.url = url;
-
-			final String query = url.getQuery();
-			if (query != null) {
-				RequestUtils.decodeParameters(query, params);
-			}
-		}
-
-		/**
-		 * @see org.apache.wicket.Request#getLocale()
-		 */
-		@Override
-		public Locale getLocale() {
-			return realRequest.getLocale();
-		}
-
-		/**
-		 * @see org.apache.wicket.Request#getParameter(java.lang.String)
-		 */
-		@Override
-		public String getParameter(final String key) {
-			return (String) params.get(key);
-		}
-
-		/**
-		 * @see org.apache.wicket.Request#getParameterMap()
-		 */
-		@SuppressWarnings({ "unchecked", "rawtypes" })
-		@Override
-		public Map getParameterMap() {
-			return params;
-		}
-
-		/**
-		 * @see org.apache.wicket.Request#getParameters(java.lang.String)
-		 */
-		@Override
-		public String[] getParameters(final String key) {
-			final String param = (String) params.get(key);
-			if (param != null) {
-				return new String[] { param };
-			}
-			return new String[0];
-		}
-
-		/**
-		 * @see org.apache.wicket.Request#getPath()
-		 */
-		@Override
-		public String getPath() {
-			String path = url.getPath();
-			if (path.startsWith("/")) {
-				path = path.substring(1);
-			}
-			return path;
-		}
-
-		@Override
-		public String getRelativePathPrefixToContextRoot() {
-			throw new NotImplementedException();
-		}
-
-		@Override
-		public String getRelativePathPrefixToWicketHandler() {
-			throw new NotImplementedException();
-		}
-
-		/**
-		 * @see org.apache.wicket.Request#getURL()
-		 */
-		@Override
-		public String getURL() {
-			return url.toString();
-		}
-
-		@Override
-		public String getQueryString() {
-			return realRequest.getQueryString();
-		}
-	}
+	// public static class UrlRequest extends Request {
+	// private final ValueMap params = new ValueMap();
+	//
+	// private final Request realRequest;
+	//
+	// private final URL url;
+	//
+	// /**
+	// * Construct.
+	// *
+	// * @param realRequest
+	// * @param url
+	// */
+	// public UrlRequest(final Request realRequest, final URL url) {
+	// this.realRequest = realRequest;
+	// this.url = url;
+	//
+	// final String query = url.getQuery();
+	// if (query != null) {
+	// RequestUtils.decodeParameters(query, params);
+	// }
+	// }
+	//
+	// /**
+	// * @see org.apache.wicket.Request#getLocale()
+	// */
+	// @Override
+	// public Locale getLocale() {
+	// return realRequest.getLocale();
+	// }
+	//
+	// /**
+	// * @see org.apache.wicket.Request#getParameter(java.lang.String)
+	// */
+	// @Override
+	// public String getParameter(final String key) {
+	// return (String) params.get(key);
+	// }
+	//
+	// /**
+	// * @see org.apache.wicket.Request#getParameterMap()
+	// */
+	// @SuppressWarnings({ "unchecked", "rawtypes" })
+	// @Override
+	// public Map getParameterMap() {
+	// return params;
+	// }
+	//
+	// /**
+	// * @see org.apache.wicket.Request#getParameters(java.lang.String)
+	// */
+	// @Override
+	// public String[] getParameters(final String key) {
+	// final String param = (String) params.get(key);
+	// if (param != null) {
+	// return new String[] { param };
+	// }
+	// return new String[0];
+	// }
+	//
+	// /**
+	// * @see org.apache.wicket.Request#getPath()
+	// */
+	// @Override
+	// public String getPath() {
+	// String path = url.getPath();
+	// if (path.startsWith("/")) {
+	// path = path.substring(1);
+	// }
+	// return path;
+	// }
+	//
+	// @Override
+	// public String getRelativePathPrefixToContextRoot() {
+	// throw new NotImplementedException();
+	// }
+	//
+	// @Override
+	// public String getRelativePathPrefixToWicketHandler() {
+	// throw new NotImplementedException();
+	// }
+	//
+	// /**
+	// * @see org.apache.wicket.Request#getURL()
+	// */
+	// @Override
+	// public String getURL() {
+	// return url.toString();
+	// }
+	//
+	// @Override
+	// public String getQueryString() {
+	// return realRequest.getQueryString();
+	// }
+	// }
 
 	public static String getRequested() {
 		final HttpServletRequest req = getHttpServletRequest();
@@ -251,16 +252,16 @@ public final class WicketUtils {
 	 * @return may return null
 	 */
 	public static HttpServletRequest getHttpServletRequest() {
-		WebRequest wr = getWebRequest();
-		return wr == null ? null : wr.getHttpServletRequest();
+		ServletWebRequest wr = getServletWebRequest();
+		return wr == null ? null : wr.getContainerRequest();
 	}
 
 	/**
 	 * @return may return null
 	 */
 	public static HttpServletResponse getHttpServletResponse() {
-		WebResponse wr = getWebResponse();
-		return wr == null ? null : wr.getHttpServletResponse();
+		ServletWebResponse wr = getServletWebResponse();
+		return wr == null ? null : wr.getContainerResponse();
 	}
 
 	/**
@@ -295,9 +296,20 @@ public final class WicketUtils {
 		return request instanceof WebRequest ? (WebRequest) request : null;
 	}
 
-	public static WebRequestCycle getWebRequestCycle() {
-		final RequestCycle rc = RequestCycle.get();
-		return rc instanceof WebRequestCycle ? (WebRequestCycle) rc : null;
+	/**
+	 * @return may return null
+	 */
+	public static ServletWebRequest getServletWebRequest() {
+		final Request request = getRequest();
+		return request instanceof ServletWebRequest ? (ServletWebRequest) request : null;
+	}
+
+	/**
+	 * @deprecated use {@link RequestCycle#get()}
+	 */
+	@Deprecated
+	public static RequestCycle getWebRequestCycle() {
+		return RequestCycle.get();
 	}
 
 	/**
@@ -314,6 +326,11 @@ public final class WicketUtils {
 	public static WebResponse getWebResponse() {
 		final Response response = getResponse();
 		return response instanceof WebResponse ? (WebResponse) response : null;
+	}
+
+	public static ServletWebResponse getServletWebResponse() {
+		final Response response = getResponse();
+		return response instanceof ServletWebResponse ? (ServletWebResponse) response : null;
 	}
 
 	public static boolean isHttps() {
@@ -399,12 +416,35 @@ public final class WicketUtils {
 		}
 	}
 
+	/**
+	 * @deprecated bad naming, use {@link #toUrl(Class)} instead
+	 */
+	@Deprecated
 	public static String toAbsolutePath(final Class<? extends Page> pageClass) {
-		return toAbsolutePath(pageClass, null);
+		return toUrl(pageClass, null).toString();
 	}
 
+	/**
+	 * @deprecated bad naming, use {@link #toUrl(Class, PageParameters)} instead
+	 */
+	@Deprecated
 	public static String toAbsolutePath(final Class<? extends Page> pageClass, final PageParameters parameters) {
-		return RequestUtils.toAbsolutePath(RequestCycle.get().urlFor(pageClass, parameters).toString());
+		return toUrl(pageClass, parameters).toString();
+	}
+
+	public static URL toUrl(final Class<? extends Page> pageClass) {
+		return toUrl(pageClass, null);
+	}
+
+	public static URL toUrl(final Class<? extends Page> pageClass, final PageParameters params) {
+		String requestUrl = getHttpServletRequest().getRequestURL().toString();
+		String url = RequestUtils.toAbsolutePath(requestUrl, RequestCycle.get().urlFor(pageClass, params).toString());
+
+		try {
+			return new URL(url);
+		} catch (final MalformedURLException e) {
+			throw new WicketRuntimeException("failed to create URL from " + url, e);
+		}
 	}
 
 	public static void performTemporaryRedirect(String targetURL) {
@@ -416,27 +456,13 @@ public final class WicketUtils {
 	}
 
 	public static void performRedirect(final String targetURL, final int statusCode) {
-		final BufferedWebResponse response = (BufferedWebResponse) RequestCycle.get().getResponse();
-		response.getHttpServletResponse().setHeader("Location", targetURL);
-		throw new AbortWithHttpStatusException(statusCode, true);
+		ThreadContext.getRequestCycle().scheduleRequestHandlerAfterCurrent(
+				new RedirectRequestHandler(targetURL, statusCode));
 	}
 
 	public static void performRedirect(final Class<? extends Page> pageClass, final PageParameters parameters,
 			final int statusCode) {
 		performRedirect(toAbsolutePath(pageClass, parameters), statusCode);
-	}
-
-	public static URL toUrl(final Class<? extends Page> pageClass) {
-		return toUrl(pageClass, null);
-	}
-
-	public static URL toUrl(final Class<? extends Page> pageClass, final PageParameters params) {
-		final String url = toAbsolutePath(pageClass, params);
-		try {
-			return new URL(url);
-		} catch (final MalformedURLException e) {
-			throw new WicketRuntimeException("failed to create URL from " + url, e);
-		}
 	}
 
 	/**
@@ -453,7 +479,23 @@ public final class WicketUtils {
 	}
 
 	public static boolean isDeployment() {
-		// should this be cached?
-		return Application.DEPLOYMENT.equals(Application.get().getConfigurationType());
+		return RuntimeConfigurationType.DEPLOYMENT.equals(Application.get().getConfigurationType());
+	}
+
+	public static LinkedHashMap<String, Object> toMap(PageParameters params) {
+		int indexed = params.getIndexedCount();
+		List<NamedPair> named = params.getAllNamed();
+
+		LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>((indexed + named.size()) * 2);
+
+		for (int i = 0; i < indexed; i++) {
+			map.put(Integer.toString(i), params.get(i));
+		}
+
+		for (NamedPair p : named) {
+			map.put(p.getKey(), p.getValue());
+		}
+
+		return map;
 	}
 }

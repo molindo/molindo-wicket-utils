@@ -19,10 +19,10 @@ import java.lang.reflect.Field;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
+import org.apache.wicket.MarkupContainer;
 import org.apache.wicket.WicketRuntimeException;
 import org.apache.wicket.application.IComponentInstantiationListener;
 import org.apache.wicket.markup.MarkupStream;
-import org.apache.wicket.markup.html.WebMarkupContainerWithAssociatedMarkup;
 import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.util.resource.IResourceStream;
@@ -48,9 +48,8 @@ public final class MarkupSourceAttributeAppender implements IComponentInstantiat
 
 	@Override
 	public void onInstantiation(final Component component) {
-		if (component instanceof WebMarkupContainerWithAssociatedMarkup) {
-			component.add(new AttributeModifier(attribute, true, new MarkupSourceModel(
-					(WebMarkupContainerWithAssociatedMarkup) component)));
+		if (component instanceof MarkupContainer) {
+			component.add(new AttributeModifier(attribute, new MarkupSourceModel((MarkupContainer) component)));
 		}
 	}
 
@@ -58,9 +57,9 @@ public final class MarkupSourceAttributeAppender implements IComponentInstantiat
 
 		private static final long serialVersionUID = 1L;
 
-		private final WebMarkupContainerWithAssociatedMarkup component;
+		private final MarkupContainer component;
 
-		private MarkupSourceModel(WebMarkupContainerWithAssociatedMarkup component) {
+		private MarkupSourceModel(MarkupContainer component) {
 			this.component = component;
 		}
 

@@ -16,17 +16,18 @@
 
 package at.molindo.wicketutils.openid;
 
-import org.apache.wicket.PageParameters;
 import org.apache.wicket.markup.html.WebPage;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 
 public class OpenIdReturnPage extends WebPage {
+
+	private static final long serialVersionUID = 1L;
 
 	public OpenIdReturnPage() {
 		this(new PageParameters());
 	}
 
 	public OpenIdReturnPage(PageParameters params) {
-		setRedirect(true);
 		OpenIdSession.get().processReturn(params);
 	}
 }

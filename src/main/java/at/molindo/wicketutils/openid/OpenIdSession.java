@@ -21,10 +21,9 @@ import java.util.List;
 import org.apache.wicket.Application;
 import org.apache.wicket.IClusterable;
 import org.apache.wicket.MetaDataKey;
-import org.apache.wicket.PageParameters;
-import org.apache.wicket.RequestCycle;
 import org.apache.wicket.Session;
 import org.apache.wicket.WicketRuntimeException;
+import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.openid4java.association.AssociationException;
 import org.openid4java.consumer.ConsumerException;
 import org.openid4java.consumer.ConsumerManager;
@@ -67,11 +66,11 @@ public class OpenIdSession implements IClusterable {
 	}
 
 	protected String getOpenIdReturnUrl() {
-		return WicketUtils.toAbsolutePath(OpenIdReturnPage.class);
+		return WicketUtils.toUrl(OpenIdReturnPage.class).toString();
 	}
 
 	public void processReturn(PageParameters params) {
-		ParameterList response = new ParameterList(params);
+		ParameterList response = new ParameterList(WicketUtils.toMap(params));
 		try {
 			VerificationResult verificationResult = getConsumerManager().verify(getOpenIdReturnUrl(), response,
 					discoveryInformation);
@@ -151,8 +150,7 @@ public class OpenIdSession implements IClusterable {
 
 		AuthRequest authRequest = createOpenIdAuthRequest();
 
-		RequestCycle.get().setRedirect(false);
-		WicketUtils.getResponse().redirect(authRequest.getDestinationUrl(true));
+		WicketUtils.performTemporaryRedirect(authRequest.getDestinationUrl(true));
 	}
 
 	private AuthRequest createOpenIdAuthRequest() {

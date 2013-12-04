@@ -17,7 +17,7 @@
 package at.molindo.wicketutils.utils;
 
 import org.apache.wicket.MetaDataKey;
-import org.apache.wicket.RequestCycle;
+import org.apache.wicket.request.cycle.RequestCycle;
 
 import at.molindo.utils.data.Pair;
 

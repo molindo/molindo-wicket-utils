@@ -15,6 +15,8 @@
  */
 package org.apache.wicket;
 
+import org.apache.wicket.request.cycle.RequestCycle;
+
 /**
  * utility to call methods with package visibility in org.apache.wicket
  */
@@ -24,9 +26,11 @@ public class VisibilityHelper {
 	}
 
 	/**
-	 * @see RequestCycle#set(RequestCycle)
+	 * @deprecated use {@link ThreadContext#setRequestCycle(RequestCycle)}
+	 *             directly
 	 */
+	@Deprecated
 	public static void set(RequestCycle requestCycle) {
-		RequestCycle.set(requestCycle);
+		ThreadContext.setRequestCycle(null);
 	}
 }
