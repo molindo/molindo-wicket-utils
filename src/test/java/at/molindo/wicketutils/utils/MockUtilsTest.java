@@ -64,7 +64,7 @@ public class MockUtilsTest {
 				}
 
 			});
-			assertEquals("./.", url);
+			assertEquals(".", url);
 
 			Locale locale = MockUtils.withRequest(testApp, new IMockRequestCallback<Locale>() {
 
