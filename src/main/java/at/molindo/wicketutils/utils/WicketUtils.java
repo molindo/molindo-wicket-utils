@@ -53,6 +53,8 @@ import org.apache.wicket.request.http.WebResponse;
 import org.apache.wicket.request.http.handler.RedirectRequestHandler;
 import org.apache.wicket.request.mapper.parameter.INamedParameters.NamedPair;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
+import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
 public final class WicketUtils {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WicketUtils.class);
@@ -498,4 +500,17 @@ public final class WicketUtils {
 
 		return map;
 	}
+
+	public static CssResourceReference css(Class<?> scope) {
+		return new CssResourceReference(scope, scope.getSimpleName() + ".css");
+	}
+
+	public static CssResourceBehavior cssBehavior(final Class<?> scope, final String media) {
+		return new CssResourceBehavior(scope, media);
+	}
+
+	public static JavaScriptResourceReference js(Class<?> scope) {
+		return new JavaScriptResourceReference(scope, scope.getSimpleName() + ".css");
+	}
+
 }
