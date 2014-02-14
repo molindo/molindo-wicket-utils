@@ -20,9 +20,7 @@ import java.util.Locale;
 
 import org.apache.wicket.protocol.http.MockHttpServletRequest;
 
-public interface IMockRequestCallback<V> {
-
-	void configure(MockRequest request);
+public interface IMockRequestCallback<V> extends IMockRequestConfigurer {
 
 	V call();
 
