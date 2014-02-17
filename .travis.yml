@@ -8,6 +8,8 @@ jdk:
 branches:
   only:
     - master
+    - wicket-1.4
+    - wicket-1.5
 
 # checkout settings
 before_install: 
