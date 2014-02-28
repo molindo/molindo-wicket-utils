@@ -55,6 +55,7 @@ import org.apache.wicket.request.mapper.parameter.INamedParameters.NamedPair;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.resource.CssResourceReference;
 import org.apache.wicket.request.resource.JavaScriptResourceReference;
+import org.apache.wicket.util.lang.Classes;
 
 public final class WicketUtils {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WicketUtils.class);
@@ -254,16 +255,24 @@ public final class WicketUtils {
 	 * @return may return null
 	 */
 	public static HttpServletRequest getHttpServletRequest() {
-		ServletWebRequest wr = getServletWebRequest();
-		return wr == null ? null : wr.getContainerRequest();
+		return getHttpServletRequest(getRequest());
+	}
+
+	public static HttpServletRequest getHttpServletRequest(Request request) {
+		Object cr = request != null ? request.getContainerRequest() : null;
+		return cr instanceof HttpServletRequest ? (HttpServletRequest) cr : null;
 	}
 
 	/**
 	 * @return may return null
 	 */
 	public static HttpServletResponse getHttpServletResponse() {
-		ServletWebResponse wr = getServletWebResponse();
-		return wr == null ? null : wr.getContainerResponse();
+		return getHttpServletResponse(getResponse());
+	}
+
+	public static HttpServletResponse getHttpServletResponse(Response response) {
+		Object cr = response != null ? response.getContainerResponse() : null;
+		return cr instanceof HttpServletResponse ? (HttpServletResponse) cr : null;
 	}
 
 	/**
@@ -491,7 +500,13 @@ public final class WicketUtils {
 		LinkedHashMap<String, Object> map = new LinkedHashMap<String, Object>((indexed + named.size()) * 2);
 
 		for (int i = 0; i < indexed; i++) {
-			map.put(Integer.toString(i), params.get(i));
+			String index = Integer.toString(i);
+			Object value = params.get(i).to(Object.class);
+
+			Object prev = map.put(index, value);
+			if (prev != null) {
+				map.put(index, merge(prev, value));
+			}
 		}
 
 		for (NamedPair p : named) {
@@ -499,6 +514,56 @@ public final class WicketUtils {
 		}
 
 		return map;
+	}
+
+	private static Object[] merge(Object objectOrObjectArray, Object object) {
+		if (objectOrObjectArray.getClass().isArray()) {
+			Object[] array = (Object[]) objectOrObjectArray;
+			Object[] copy = new Object[array.length + 1];
+			System.arraycopy(array, 0, copy, 0, array.length);
+			copy[array.length] = object;
+			return copy;
+		} else {
+			return new Object[] { objectOrObjectArray, object };
+		}
+	}
+
+	/**
+	 * replacement for {@link Classes}.resolveClass(String)
+	 * 
+	 * @param <T>
+	 *            class type
+	 * @param className
+	 *            Class to resolve
+	 * @return Resolved class
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> Class<T> resolveClass(final String className) {
+		if (className == null) {
+			return null;
+		}
+		try {
+			if (Application.exists()) {
+				return (Class<T>) Application.get().getApplicationSettings().getClassResolver().resolveClass(className);
+			}
+			return (Class<T>) Class.forName(className);
+		} catch (ClassNotFoundException e) {
+			log.warn("Could not resolve class: " + className);
+			return null;
+		}
+	}
+
+	/**
+	 * replacement for {@link RequestUtils}.toAbsolutePath(String)
+	 * 
+	 * Calculates absolute path to url relative to another absolute url.
+	 * 
+	 * @param relativePagePath
+	 *            path, relative to requestPath
+	 * @return absolute path for given url
+	 */
+	public final static String toAbsolutePath(final String relativePagePath) {
+		return RequestUtils.toAbsolutePath(getHttpServletRequest().getRequestURL().toString(), relativePagePath);
 	}
 
 	public static CssResourceReference css(Class<?> scope) {
