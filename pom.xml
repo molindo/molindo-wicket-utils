@@ -59,6 +59,14 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.wicket</groupId>
+			<artifactId>wicket-ioc</artifactId>
+			<version>${wicket.version}</version>
+			<!-- only for migration package -->
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
 			<groupId>org.openid4java</groupId>
 			<artifactId>openid4java-consumer</artifactId>
 			<version>${openid4java.version}</version>
