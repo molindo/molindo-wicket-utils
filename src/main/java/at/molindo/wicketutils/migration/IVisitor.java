@@ -54,7 +54,7 @@ public abstract class IVisitor<T extends Component> implements org.apache.wicket
 		if (o == CONTINUE_TRAVERSAL_BUT_DONT_GO_DEEPER) {
 			visit.dontGoDeeper();
 		} else if (o != CONTINUE_TRAVERSAL) {
-			visit.stop(STOP_TRAVERSAL);
+			visit.stop(o);
 		}
 	}
 
