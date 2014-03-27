@@ -502,7 +502,11 @@ public final class WicketUtils {
 	}
 
 	public static CssResourceReference css(Class<?> scope) {
-		return new CssResourceReference(scope, scope.getSimpleName() + ".css");
+		return css(scope, scope.getSimpleName() + ".css");
+	}
+
+	public static CssResourceReference css(Class<?> scope, String name) {
+		return new CssResourceReference(scope, name);
 	}
 
 	public static CssResourceBehavior cssBehavior(final Class<?> scope, final String media) {

@@ -36,6 +36,17 @@ public final class CssResourceBehavior extends Behavior {
 		_media = media;
 	}
 
+	public CssResourceBehavior(final Class<?> scope, final String name, final String media) {
+		if (scope == null) {
+			throw new NullPointerException("scope");
+		}
+		if (name == null) {
+			throw new NullPointerException("name");
+		}
+		_reference = WicketUtils.css(scope, name);
+		_media = media;
+	}
+
 	@Override
 	public void renderHead(final Component component, final IHeaderResponse response) {
 		response.render(new CssReferenceHeaderItem(_reference, null, _media, null));
