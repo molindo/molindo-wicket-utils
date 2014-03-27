@@ -513,6 +513,10 @@ public final class WicketUtils {
 		return new CssResourceBehavior(scope, media);
 	}
 
+	public static CssResourceBehavior cssBehavior(final Class<?> scope, final String name, final String media) {
+		return new CssResourceBehavior(scope, name, media);
+	}
+
 	public static JavaScriptResourceReference js(Class<?> scope) {
 		return new JavaScriptResourceReference(scope, scope.getSimpleName() + ".css");
 	}
