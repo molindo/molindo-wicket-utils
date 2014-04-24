@@ -17,6 +17,8 @@
 package at.molindo.wicketutils.utils;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,6 +56,8 @@ import org.apache.wicket.request.http.handler.RedirectRequestHandler;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.request.mapper.parameter.PageParameters.NamedPair;
 import org.apache.wicket.util.lang.Classes;
+
+import at.molindo.thirdparty.org.apache.http.client.utils.URIUtils;
 
 public final class WicketUtils {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WicketUtils.class);
@@ -446,13 +450,15 @@ public final class WicketUtils {
 	}
 
 	public static URL toUrl(final Class<? extends Page> pageClass, final PageParameters params) {
-		String requestUrl = getHttpServletRequest().getRequestURL().toString();
-		String url = RequestUtils.toAbsolutePath(requestUrl, RequestCycle.get().urlFor(pageClass, params).toString());
-
 		try {
-			return new URL(url);
-		} catch (final MalformedURLException e) {
-			throw new WicketRuntimeException("failed to create URL from " + url, e);
+			String relativePagePath = RequestCycle.get().urlFor(pageClass, params).toString();
+			URL requestUrl = new URL(getHttpServletRequest().getRequestURL().toString());
+			URI resolved = URIUtils.resolve(requestUrl.toURI(), relativePagePath);
+			return resolved.toURL();
+		} catch (MalformedURLException e) {
+			throw new WicketRuntimeException("failed to create URL", e);
+		} catch (URISyntaxException e) {
+			throw new WicketRuntimeException("failed to create URL", e);
 		}
 	}
 
