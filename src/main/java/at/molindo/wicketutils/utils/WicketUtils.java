@@ -17,6 +17,8 @@
 package at.molindo.wicketutils.utils;
 
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Locale;
 import java.util.Map;
@@ -53,6 +55,8 @@ import org.apache.wicket.request.RequestParameters;
 import org.apache.wicket.request.target.component.BookmarkablePageRequestTarget;
 import org.apache.wicket.request.target.component.IBookmarkablePageRequestTarget;
 import org.apache.wicket.util.value.ValueMap;
+
+import at.molindo.thirdparty.org.apache.http.client.utils.URIUtils;
 
 public final class WicketUtils {
 	private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(WicketUtils.class);
@@ -404,7 +408,7 @@ public final class WicketUtils {
 	}
 
 	public static String toAbsolutePath(final Class<? extends Page> pageClass, final PageParameters parameters) {
-		return RequestUtils.toAbsolutePath(RequestCycle.get().urlFor(pageClass, parameters).toString());
+		return toUrl(pageClass, parameters).toString();
 	}
 
 	public static void performTemporaryRedirect(String targetURL) {
@@ -431,11 +435,15 @@ public final class WicketUtils {
 	}
 
 	public static URL toUrl(final Class<? extends Page> pageClass, final PageParameters params) {
-		final String url = toAbsolutePath(pageClass, params);
 		try {
-			return new URL(url);
-		} catch (final MalformedURLException e) {
-			throw new WicketRuntimeException("failed to create URL from " + url, e);
+			String relativePagePath = RequestCycle.get().urlFor(pageClass, params).toString();
+			URL requestUrl = new URL(getHttpServletRequest().getRequestURL().toString());
+			URI resolved = URIUtils.resolve(requestUrl.toURI(), relativePagePath);
+			return resolved.toURL();
+		} catch (MalformedURLException e) {
+			throw new WicketRuntimeException("failed to create URL", e);
+		} catch (URISyntaxException e) {
+			throw new WicketRuntimeException("failed to create URL", e);
 		}
 	}
 
