@@ -15,12 +15,40 @@
  */
 package at.molindo.wicketutils.migration;
 
-/**
- * support new capitalization standard of JavaScript for convenience
- */
-public class JavaScriptPackageResource extends JavascriptPackageResource {
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.request.resource.PackageResourceReference;
+import org.apache.wicket.request.resource.ResourceReference;
 
-	private JavaScriptPackageResource() {
+public class JavaScriptPackageResource {
+
+	JavaScriptPackageResource() {
+	}
+
+	public static HeaderContributor getHeaderContribution(final String location) {
+		return new HeaderContributor() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void renderHead(IHeaderResponse response) {
+				response.render(JavaScriptHeaderItem.forUrl(location));
+			}
+		};
+	}
+
+	public static HeaderContributor getHeaderContribution(final Class<?> scope, final String name) {
+		return getHeaderContribution(new PackageResourceReference(scope, name));
+	}
+
+	public static HeaderContributor getHeaderContribution(final ResourceReference ref) {
+		return new HeaderContributor() {
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void renderHead(IHeaderResponse response) {
+				response.render(JavaScriptHeaderItem.forReference(ref));
+			}
+		};
 	}
 
 }
