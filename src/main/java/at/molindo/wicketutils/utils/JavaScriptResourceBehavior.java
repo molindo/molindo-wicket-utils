@@ -17,47 +17,40 @@ package at.molindo.wicketutils.utils;
 
 import org.apache.wicket.Component;
 import org.apache.wicket.behavior.Behavior;
-import org.apache.wicket.markup.head.CssReferenceHeaderItem;
 import org.apache.wicket.markup.head.IHeaderResponse;
-import org.apache.wicket.request.resource.CssResourceReference;
+import org.apache.wicket.markup.head.JavaScriptHeaderItem;
+import org.apache.wicket.request.resource.JavaScriptResourceReference;
 
-public final class CssResourceBehavior extends Behavior {
+public final class JavaScriptResourceBehavior extends Behavior {
 
 	private static final long serialVersionUID = 1L;
 
-	private final CssResourceReference _reference;
-	private final String _media;
+	private final JavaScriptResourceReference _reference;
 
-	public CssResourceBehavior(final Class<?> scope, final String media) {
+	public JavaScriptResourceBehavior(final Class<?> scope) {
 		if (scope == null) {
 			throw new NullPointerException("scope");
 		}
-		_reference = WicketUtils.css(scope);
-		_media = media;
+		_reference = WicketUtils.js(scope);
 	}
 
-	public CssResourceBehavior(final Class<?> scope, final String name, final String media) {
+	public JavaScriptResourceBehavior(final Class<?> scope, final String name) {
 		if (scope == null) {
 			throw new NullPointerException("scope");
 		}
 		if (name == null) {
 			throw new NullPointerException("name");
 		}
-		_reference = WicketUtils.css(scope, name);
-		_media = media;
+		_reference = WicketUtils.js(scope, name);
 	}
 
 	@Override
 	public void renderHead(final Component component, final IHeaderResponse response) {
-		response.render(new CssReferenceHeaderItem(_reference, null, _media, null));
+		response.render(JavaScriptHeaderItem.forReference(_reference));
 	}
 
-	public CssResourceReference getResourceReference() {
+	public JavaScriptResourceReference getResourceReference() {
 		return _reference;
-	}
-
-	public String getMedia() {
-		return _media;
 	}
 
 }

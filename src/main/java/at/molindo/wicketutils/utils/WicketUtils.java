@@ -573,15 +573,35 @@ public final class WicketUtils {
 	}
 
 	public static CssResourceReference css(Class<?> scope) {
-		return new CssResourceReference(scope, scope.getSimpleName() + ".css");
+		return css(scope, scope.getSimpleName() + ".css");
 	}
 
-	public static CssResourceBehavior cssBehavior(final Class<?> scope, final String media) {
+	public static CssResourceReference css(Class<?> scope, String name) {
+		return new CssResourceReference(scope, name);
+	}
+
+	public static CssResourceBehavior cssBehavior(Class<?> scope, String media) {
 		return new CssResourceBehavior(scope, media);
 	}
 
+	public static CssResourceBehavior cssBehavior(Class<?> scope, String name, String media) {
+		return new CssResourceBehavior(scope, name, media);
+	}
+
 	public static JavaScriptResourceReference js(Class<?> scope) {
-		return new JavaScriptResourceReference(scope, scope.getSimpleName() + ".css");
+		return js(scope, scope.getSimpleName() + ".js");
+	}
+
+	public static JavaScriptResourceReference js(Class<?> scope, String name) {
+		return new JavaScriptResourceReference(scope, name);
+	}
+
+	public static JavaScriptResourceBehavior jsBehavior(Class<?> scope) {
+		return new JavaScriptResourceBehavior(scope);
+	}
+
+	public static JavaScriptResourceBehavior jsBehavior(Class<?> scope, String name) {
+		return new JavaScriptResourceBehavior(scope, name);
 	}
 
 }
