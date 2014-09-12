@@ -169,7 +169,7 @@ public class MockUtils {
 				}
 
 				@Override
-				public Enumeration<?> getInitParameterNames() {
+				public Enumeration<String> getInitParameterNames() {
 					return null;
 				}
 

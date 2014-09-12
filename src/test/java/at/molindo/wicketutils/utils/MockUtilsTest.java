@@ -24,6 +24,8 @@ import java.util.Locale;
 
 import org.apache.wicket.Application;
 import org.apache.wicket.Session;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.junit.Test;
@@ -50,7 +52,8 @@ public class MockUtilsTest {
 					assertFalse(Session.exists());
 					assertTrue(RequestCycle.get() != null);
 
-					return new StringResourceModel("someResource", null, "default value").getString();
+					return new StringResourceModel("someResource", (IModel<?>) null, Model.of("default value"))
+							.getString();
 				}
 
 			});
