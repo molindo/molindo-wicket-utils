@@ -10,6 +10,7 @@ branches:
     - master
     - wicket-1.4
     - wicket-1.5
+    - wicket-6.0
 
 # checkout settings
 before_install: 
