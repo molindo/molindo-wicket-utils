@@ -36,7 +36,7 @@
 		<dependency>
 			<groupId>at.molindo</groupId>
 			<artifactId>molindo-utils</artifactId>
-			<version>1.1.2-SNAPSHOT</version>
+			<version>${molindo-utils.version}</version>
 		</dependency>
 
 		<dependency>
@@ -107,7 +107,7 @@
 	</dependencies>
 
 	<properties>
-		<molindo-utils.version>1.0-alpha-1</molindo-utils.version>
+		<molindo-utils.version>1.1.5</molindo-utils.version>
 		<wicket.version>1.4.13</wicket.version>
 		<openid4java.version>0.9.6</openid4java.version>
 		<joda-time.version>1.6.2</joda-time.version>
