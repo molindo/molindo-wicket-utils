@@ -9,7 +9,7 @@
 	</parent>
 
 	<artifactId>molindo-wicket-utils</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.1</version>
 	<packaging>jar</packaging>
 
 	<name>Molindo Wicket Utils</name>
