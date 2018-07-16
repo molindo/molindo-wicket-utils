@@ -1,6 +1,11 @@
 # deploy Maven artifacts to Sonatype OSS repo
 language: java
 
+addons:
+  apt:
+    packages:
+      - openjdk-6-jdk
+
 jdk:
   - openjdk6
 
@@ -12,7 +17,7 @@ branches:
     - wicket-1.5
 
 # checkout settings
-before_install: 
+before_install:
   - "git clone -b master https://github.com/molindo/travis-settings.git target/travis-settings"
   - "target/travis-settings/tasks/before_install.sh"
 
@@ -23,7 +28,7 @@ script:  "target/travis-settings/tasks/script.sh"
 # travis encrypt 'token@room'
 notifications:
   email: false
-  hipchat: 
+  hipchat:
     rooms:
       - secure: "WFGsSbTxQKFRNHBoqNNuMyW64rVeCzlOJypB3zvN4gxF1eW3P7KwN+zqhJzUFPHHlvZrU3Col7KvX6xHr8UkY7r/GJYk/0MOJqO5kFdanOiBQtwYDPsfALmSS0wIOsfHTgANMTiOAuC9txGZD3SSdDA9qSsQOY4k8bHqw59F8Ac="
     template:
