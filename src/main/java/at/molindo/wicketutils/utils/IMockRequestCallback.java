@@ -18,23 +18,23 @@ package at.molindo.wicketutils.utils;
 
 import java.util.Locale;
 
-import org.apache.wicket.protocol.http.MockHttpServletRequest;
+import at.molindo.wicketutils.utils.MockUtils.MockServletRequest;
 
 public interface IMockRequestCallback<V> extends IMockRequestConfigurer {
 
 	V call();
 
 	public static class MockRequest {
-		private final MockHttpServletRequest _servletRequest;
+		private final MockServletRequest _servletRequest;
 
-		MockRequest(MockHttpServletRequest servletRequest) {
+		MockRequest(MockServletRequest servletRequest) {
 			if (servletRequest == null) {
 				throw new NullPointerException("servletRequest");
 			}
 			_servletRequest = servletRequest;
 		}
 
-		public final MockHttpServletRequest getServletRequest() {
+		public final MockServletRequest getServletRequest() {
 			return _servletRequest;
 		}
 

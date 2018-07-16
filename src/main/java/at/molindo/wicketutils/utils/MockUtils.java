@@ -101,7 +101,7 @@ public class MockUtils {
 				callback.configure(new MockRequest(servletRequest));
 				servletRequest.setDefaultHeaders();
 
-				MockHttpServletResponse servletResponse = new MockHttpServletResponse(servletRequest);
+				MockHttpServletResponse servletResponse = new MockServletResponse(servletRequest);
 
 				final WebRequest request = VisibilityHelper.newWebRequest(webApplication, servletRequest);
 				final WebResponse response = VisibilityHelper.newWebResponse(webApplication, servletResponse);
@@ -126,8 +126,13 @@ public class MockUtils {
 		}
 	}
 
-	private static final class MockServletRequest extends MockHttpServletRequest {
+	public static final class MockServletRequest extends MockHttpServletRequest {
+
 		private boolean _initialized = false;
+
+		private String _scheme = "http";
+		private String _serverName = "localhost";
+		private int _serverPort = 80;
 
 		private MockServletRequest(Application application, HttpSession session, ServletContext context) {
 			super(application, session, context);
@@ -139,6 +144,60 @@ public class MockUtils {
 			if (_initialized) {
 				super.addHeader(name, value);
 			}
+		}
+
+		public void setScheme(String scheme) {
+			_scheme = scheme;
+		}
+
+		@Override
+		public String getScheme() {
+			return _scheme;
+		}
+
+		public void setServerName(String serverName) {
+			_serverName = serverName;
+		}
+
+		@Override
+		public String getServerName() {
+			return _serverName;
+		}
+
+		public void setServerPort(int serverPort) {
+			_serverPort = serverPort;
+		}
+
+		@Override
+		public int getServerPort() {
+			return _serverPort;
+		}
+
+		@Override
+		public boolean isSecure() {
+			return "https".equals(getScheme());
+		}
+
+		@Override
+		public StringBuffer getRequestURL() {
+			final StringBuffer buf = new StringBuffer();
+			buf.append(getScheme()).append("://").append(getServerName());
+			if (!("http".equals(getScheme()) && getServerPort() == 80)
+					&& !("https".equals(getScheme()) && getServerPort() == 443)) {
+				buf.append(":").append(getServerPort());
+			}
+
+			buf.append(getContextPath());
+			if (getPathInfo() != null) {
+				buf.append(getPathInfo());
+			}
+
+			final String query = getQueryString();
+			if (query != null) {
+				buf.append('?');
+				buf.append(query);
+			}
+			return buf;
 		}
 
 		private void setDefaultHeaders() {
@@ -161,6 +220,14 @@ public class MockUtils {
 						"Mozilla/5.0 (Windows; U; Windows NT 5.0; en-US; rv:1.7) Gecko/20040707 Firefox/0.9.2");
 			}
 		}
+	}
+
+	public static class MockServletResponse extends MockHttpServletResponse {
+
+		public MockServletResponse(MockServletRequest request) {
+			super(request);
+		}
+
 	}
 
 	public static WicketFilter newMockFilter(final WebApplication application) {
