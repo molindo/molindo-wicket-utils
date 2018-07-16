@@ -30,6 +30,8 @@ import org.apache.wicket.model.StringResourceModel;
 import org.apache.wicket.protocol.http.WebApplication;
 import org.junit.Test;
 
+import at.molindo.wicketutils.utils.MockUtils.MockServletRequest;
+
 public class MockUtilsTest {
 
 	@Test
@@ -79,6 +81,24 @@ public class MockUtilsTest {
 
 		});
 		assertEquals(Locale.GERMAN, locale);
+
+		String requestURL = MockUtils.withRequest(testApp, new IMockRequestCallback<String>() {
+
+			@Override
+			public void configure(MockRequest request) {
+				MockServletRequest req = request.getServletRequest();
+				req.setScheme("https");
+				req.setServerName("example.com");
+				req.setServerPort(443);
+			}
+
+			@Override
+			public String call() {
+				return WicketUtils.getHttpServletRequest().getRequestURL().toString();
+			}
+
+		});
+		assertTrue(requestURL.startsWith("https://example.com/"));
 
 		assertFalse(Application.exists());
 		assertFalse(Session.exists());
