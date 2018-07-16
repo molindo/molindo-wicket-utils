@@ -1,13 +1,8 @@
 # deploy Maven artifacts to Sonatype OSS repo
 language: java
 
-addons:
-  apt:
-    packages:
-      - openjdk-6-jdk
-
 jdk:
-  - openjdk6
+  - openjdk7
 
 # whitelist
 branches:
